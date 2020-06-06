@@ -1,0 +1,56 @@
+---
+# All works minus checking the OS-level lines 32-40
+- hosts: all
+  gather_facts: false
+  tasks:
+# Get a listing of all locked filesets and the locking EFIX label. 
+  - name: Get efix listing
+    shell: /usr/sbin/emgr -P
+    register: efix_out
+  
+  - debug:
+      msg: "{{ efix_out.stderr }}"
+
+# Preview the creation of the multibos environment.
+# Exit from runbook if there are efixes on the system.
+  - name: multibos creation preview
+    shell: multibos -Xsp
+    register: output
+    when: efix_out.stderr == "There is no efix data on this system."
+  
+  - debug:
+      msg: "{{ output.stdout_lines }}"
+
+# Create multibos environment.
+  - name: multibos Create.  This may take up to an hour to complete.
+    shell: multibos -Xs
+    register: output
+
+  - debug:
+      msg: "{{ output.stdout_lines }}"
+
+# Check the OS level
+#  - name: Checking standby image OS level.
+#    shell: multibos -S;
+#           oslevel -s;
+#           exit;
+#    register: output
+
+#  - debug:
+#      msg: "{{  output.stdout_lines }}"
+
+# Preview multibos install
+  - name: multibos update preview.
+    shell: multibos -Xacp -l /usr/bin/tier3/AIX/7100-05-04-1914/installp/ppc
+    register: output
+  
+  - debug:
+      msg: "{{  output.stdout_lines }}"
+      
+ # multibos install execution
+  - name: multibos update execution.
+    shell: multibos -Xac -l /usr/bin/tier3/AIX/7100-05-04-1914/installp/ppc
+    register: output
+  
+  - debug:
+      msg: "{{  output.stdout_lines }}"
